@@ -6,6 +6,7 @@ use warnings;
 
 my $verbose = 0;
 my $gran = "day"; # granularity: hour, day
+my $fatal = 1;    # ERRORs are fatal
 
 # Dont include created files (new code has either no brainpower (full of bugs) behind it, or is inherited (dont double-count))
 # Deleted files can also distort for example in code rearrangements with a net code change in zero
@@ -21,10 +22,13 @@ foreach my $arg (@ARGV){
   if($arg eq "-h" or $arg eq "--help"){
     print "Usage: echo -e \"/home/my/gitrepo1\\n/home/my/gitrepo2\" | gitstatjson.pl [-v|-v|-a|-H]\n";
     print " -v be verbose (to stderr), -a include deleted/created files, -H hourly statistics\n";
+    print " -e errors are not fatal\n";
     print " --ef=<exclude_file> file with lines to exclude\n";
     exit(1);
   }elsif($arg eq "-v"){
     $verbose++;
+  }elsif($arg eq "-e"){
+    $fatal = 0;
   }elsif($arg eq "-a"){
     $skip_create_delete = 0;
   }elsif($arg eq "-H"){
@@ -136,11 +140,16 @@ create_summary_state();
 #### Subs
 
 sub update_repo_state {
-  my($repo, $line, $ex) = @_;
+  my($repo, $line) = @_;
   my $currc = $hr{$repo}{currc}; # last/current commit
-  print STDERR "$ex> $line\n" if $verbose > 1;
-  if($line =~ /^$magic\s+(\d+-\d+-\d+\s+\d+:\d+:\d+)\s+(\+\d+)\s+(.*);(.*)/){
+  print STDERR "> $line\n" if $verbose > 1;
+  if($line =~ /^$magic\s+(\d+-\d+-\d+\s+\d+:\d+:\d+)\s+([+-]*\d+)\s+([^;]+);(.*)/){
     my $date = $1;
+    if(!defined $date){
+      print STDERR "ERROR: cant parse date from line: $line";
+      die if($fatal);
+      return;
+    }
     if($gran eq "hour"){
       $date =~ s/(\d+-\d+-\d+\s+\d+):.*/$1/;
     }else{ # default do daily buckets
@@ -151,6 +160,7 @@ sub update_repo_state {
     $hr{$repo}{$date}{user} = $3;
     $hr{$repo}{$date}{subj} = $4;
     $hr{$repo}{currc} = $date; # pointer to last/current commit; KLUDGY way to store state; would need to separate working and final state
+    $currc = $date;
   }elsif($line =~ /\s*(\d+)\s+(\d+)\s+(.*)/){
     my $file = $3;
     $hr{$repo}{$currc}{file}{$file}{add}  += $1; # added lines
@@ -161,6 +171,11 @@ sub update_repo_state {
   }elsif($line =~ /\s+create mode \d+\s+(.*)/){
     my $file = $1;
     $hr{$repo}{$currc}{file}{$file}{create} = 1; # mark file as created
+  }
+  if(!defined($currc)){
+    print STDERR "ERROR: no current date: $line";
+    die if($fatal);
+    return;
   }
 }
 

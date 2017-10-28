@@ -10,6 +10,8 @@ Misc sysutils
      -v be verbose (to stderr), -a include deleted/created files, -H hourly statistics
      --ef=<exclude_file> file with lines to exclude
 
+    Example:  echo /home/my/git/linux | gitstatjson.pl -v -v --ef=excl > /var/www/git.json 2> log
+
   Exclude file format:
 
   --ef=exclude.txt
