@@ -16,9 +16,9 @@ Misc sysutils
 
   exclude.txt:
 
-    | myrepo1:
-    |   dummyfile
-    |   data/dir/
-    | myrepo2:
-    |   foobar
+      myrepo1:
+        dummyfile
+        data/dir/
+      myrepo2:
+        foobar
 
