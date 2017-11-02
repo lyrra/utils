@@ -1,15 +1,15 @@
 # Misc sysutils
-=============
+---------------
 
   ## Scripts:
 
   - gitstatjson.pl -- make a json output of your list of git repos
   - tuerl.pl -- tool to quickly use EUnit (also: can test private functions outside of target-module)
 
-
+  --------------
 
   ## tuerl.pl
-  --------------
+
   Run through all test files in a directory and call EUnit on them.
 
   Example
@@ -50,8 +50,9 @@
 
     Also check $? == 0 if you script tuerl.pl (zero if all tests passed).
 
+  -----------------
+
   ## gitstatjson.pl
-  --------------
 
   convert git log statistics into json-data (usable with D3)
 
