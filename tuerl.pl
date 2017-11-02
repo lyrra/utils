@@ -101,14 +101,17 @@ sub comp_file
   open $fh, '>', "$outname.erl" or die "Cant open file for write, reason: $!";
   print $fh "-module($outname).\n";
   print $fh "-include_lib(\"eunit/include/eunit.hrl\").\n\n";
-
-  print $fh "%%%% Target preamble\n\n";
-  foreach my $line (@targprea){
-    print $fh $line;
-  }
-  print $fh "\n%%%% Test preable\n\n";
-  foreach my $line (@testprea){
-    print $fh $line;
+  print "Using test-preamble: $#testprea\n" if $verbose;
+  if($#testprea == -1){ # no test preamble
+    print $fh "%%%% Target preamble\n\n";
+    foreach my $line (@targprea){
+      print $fh $line;
+    }
+  }else{
+    print $fh "\n%%%% Test preable\n\n";
+    foreach my $line (@testprea){
+      print $fh $line;
+    }
   }
   print $fh "\n%%%% Target code\n\n";
   foreach my $line (@targcode){
