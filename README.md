@@ -18,6 +18,7 @@
     src/t/t_01_foo.erl -- one of your files contaning test case
 
   FILE: src/hello.erl
+
     -module(hello).
     -export([hello_world]).
     -define(NAT, 123).
@@ -25,9 +26,11 @@
     hello_world() -> ?NAT.
 
   FILE: src/t/mycommon.erl
+
     is_natural (X) -> is_integer(X) and (X > 0).
 
   FILE: src/t/t_01_foo.erl
+
     # this file has tests for hello module
     file: ../hello.erl
     # below three lines are optional if you want to replace the targets headers(-export, -define, etc)
@@ -39,6 +42,7 @@
     t_01_my_test_ () -> [?_assert(is_natural(hello_world))].
 
   At shell:
+
     $ cd t  # go into your test directory
     $ ./tuerl.pl -v --inc=mycommon.erl --erl="-pa .. -pa ../epgsql/ebin -pa ../jiffy/ebin"
     ...
