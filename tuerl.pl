@@ -11,7 +11,10 @@ my $erladd = "";
 foreach my $arg (@ARGV){
   chomp $arg;
   if($arg =~ /--inc=(.*)/){
+    # FIX: only a single include file is supported, use push
     $incfile = $1;
+  }elsif($arg =~ /--files=(.*)/){
+    $mask = $1;
   }elsif($arg =~ /--erl=(.*)/){
     $erladd = $1;
   }elsif($arg eq "-v"){
@@ -23,7 +26,7 @@ foreach my $arg (@ARGV){
 }
 
 my @testfiles = `ls $mask`;
-
+my $n = 0;
 foreach my $testfile (@testfiles){
   chomp $testfile;
   print "Compiling test $testfile\n" if $verbose;
@@ -32,7 +35,9 @@ foreach my $testfile (@testfiles){
   comp_src("t.erl");
   print "Run tests\n" if $verbose;
   run_eunit("t", $testfile);
+  $n++;
 }
+print "Passed $n testfiles.\n";
 
 sub run_eunit
 {
@@ -113,17 +118,32 @@ sub comp_file
       print $fh $line;
     }
   }
-  print $fh "\n%%%% Target code\n\n";
-  foreach my $line (@targcode){
-    print $fh $line;
-  }
-  if($incfile){
+  # record function names we find in include files, these will
+  # be excluded from the target code
+  %skipfun = ();
+  if($incfile){ # FIX: only a single include file is supported
     print $fh "\n%%%% Test common/include code\n\n";
     open my $ih, '<', $incfile or die "Cant open file: $incfile, reason: $!";
     while($line = <$ih>){
+      if($line =~ /^(\w+)\s*\(.*->/){
+        $skipfun{$1} = 1;
+        print "Skip function [$1] from target\n";
+      }
       print $fh $line;
     }
     close $ih;
+  }
+  print $fh "\n%%%% Target code\n\n";
+  my $p = 1; # if 1: print, if 0: skip line
+  foreach my $line (@targcode){
+    if($line =~ /^(\w+)\s*\(.*->/){ # begin function def
+      $p = 1;
+      if($skipfun{$1}){
+        print "    skipping function [$1]\n";
+        $p = 0;
+      }
+    }
+    print $fh $line if $p;
   }
   print $fh "\n%%%% Test code\n\n";
   foreach my $line (@testcode){
